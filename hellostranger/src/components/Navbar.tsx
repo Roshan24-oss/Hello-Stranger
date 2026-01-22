@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import React from 'react'
-import { motion } from "motion/react"
-import { Sparkle } from 'lucide-react'
+import React from 'react';
+import { motion } from "motion/react";
+import { Sparkle } from 'lucide-react';
 
 const Navbar = () => {
   return (
@@ -25,4 +25,4 @@ const Navbar = () => {
   )
 }
 
-export default Navbar
+export default Navbar;
