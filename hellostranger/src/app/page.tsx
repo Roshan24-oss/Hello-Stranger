@@ -16,32 +16,36 @@ export default function Home() {
   const [roomId, setRoomId] = useState("");
   const pause = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-  useEffect(() => {
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
-      transports: ["websocket"],
-    });
+ useEffect(() => {
+  const socket: Socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+    transports: ["websocket"],
+  });
 
-    socketRef.current = socket;
+  socketRef.current = socket;
 
-    socket.on("waiting", () => setStatus("waiting"));
-    socket.on("only_one", () => {
-      setStatus("only_one");
-      setTimeout(() => socket.emit("start"), 1500);
-    });
-    socket.on("matched", async ({ roomId }) => {
-      await pause(1500);
-      setRoomId(roomId);
-      setStatus("chatting");
-    });
-    socket.on("partner_left", async () => {
-      setRoomId("");
-      setStatus("left");
-      await pause(1500);
-      socket.emit("start");
-    });
+  socket.on("waiting", () => setStatus("waiting"));
+  socket.on("only_one", () => {
+    setStatus("only_one");
+    setTimeout(() => socket.emit("start"), 1500);
+  });
+  socket.on("matched", async ({ roomId }) => {
+    await pause(1500);
+    setRoomId(roomId);
+    setStatus("chatting");
+  });
+  socket.on("partner_left", async () => {
+    setRoomId("");
+    setStatus("left");
+    await pause(1500);
+    socket.emit("start");
+  });
 
-    return () => socket.disconnect();
-  }, []);
+  
+  return () => {
+    socket.disconnect(); 
+  };
+}, []);
+
 
   const startChat = () => {
     setStatus("waiting");
@@ -60,7 +64,7 @@ export default function Home() {
 
       <main className="relative min-h-screen bg-black text-white flex flex-col items-center">
         <AnimatePresence mode="wait">
-          {/* Idle Screen */}
+        
           {status === "idle" && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -92,7 +96,7 @@ export default function Home() {
             </motion.div>
           )}
 
-          {/* Waiting / Left / Only One */}
+          
           {(status === "waiting" || status === "left" || status === "only_one") && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -108,7 +112,7 @@ export default function Home() {
             </motion.div>
           )}
 
-          {/* Chatting Screen */}
+          
           {status === "chatting" && roomId && (
             <>
               <VideoRoom roomId={roomId} />
