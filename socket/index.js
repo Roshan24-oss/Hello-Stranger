@@ -1,7 +1,7 @@
-import http from 'http';
-import { Server } from 'socket.io';
+import http from "http";
+import { Server } from "socket.io";
 import { v4 as uuid } from "uuid";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -9,33 +9,46 @@ const server = http.createServer();
 const port = process.env.PORT || 8000;
 
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: { origin: "*" },
 });
 
 const waitingQueue = [];
 const activePairs = new Map();
 
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   console.log("Connected:", socket.id);
-  if (waitingQueue.includes(socket.id)) return;
 
   socket.on("start", () => {
     if (waitingQueue.length > 0) {
       const partner = waitingQueue.shift();
       const roomId = uuid();
+
       activePairs.set(socket.id, partner);
       activePairs.set(partner, socket.id);
+
       socket.emit("matched", { roomId });
-      socket.to(partner).emit("matched", { roomId });
+      io.to(partner).emit("matched", { roomId });
     } else {
       waitingQueue.push(socket.id);
       socket.emit("waiting");
     }
   });
 
-  socket.on("next", () => handleLeave(socket.id));
+  socket.on("next", () => {
+    handleLeave(socket.id);
 
-  socket.on("disconnect", () => handleLeave(socket.id));
+    if (waitingQueue.length === 0) {
+      waitingQueue.push(socket.id);
+      socket.emit("only_one");
+    } else {
+      waitingQueue.push(socket.id);
+      socket.emit("waiting");
+    }
+  });
+
+  socket.on("disconnect", () => {
+    handleLeave(socket.id);
+  });
 
   function handleLeave(id) {
     const index = waitingQueue.indexOf(id);

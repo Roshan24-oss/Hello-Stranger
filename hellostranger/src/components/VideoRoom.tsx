@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface VideoRoomProps {
   roomId: string;
@@ -14,25 +14,31 @@ export default function VideoRoom({ roomId }: VideoRoomProps) {
     let mounted = true;
 
     const init = async () => {
-      const { ZegoUIKitPrebuilt } = await import('@zegocloud/zego-uikit-prebuilt');
+      const { ZegoUIKitPrebuilt } = await import(
+        "@zegocloud/zego-uikit-prebuilt"
+      );
 
       if (!mounted || !containerRef.current) return;
 
       const userId = crypto.randomUUID();
-      const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
-        Number(process.env.NEXT_PUBLIC_ZEGO_APP_ID),
-        process.env.NEXT_PUBLIC_ZEGO_SERVER_SECRET!,
-        roomId,
-        userId,
-        `user-${userId.slice(0, 5)}`
-      );
+
+      const kitToken =
+        ZegoUIKitPrebuilt.generateKitTokenForTest(
+          Number(process.env.NEXT_PUBLIC_ZEGO_APP_ID),
+          process.env.NEXT_PUBLIC_ZEGO_SERVER_SECRET!,
+          roomId,
+          userId,
+          `user-${userId.slice(0, 5)}`
+        );
 
       const zp = ZegoUIKitPrebuilt.create(kitToken);
       zpRef.current = zp;
 
       zp.joinRoom({
         container: containerRef.current,
-        scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
+        scenario: {
+          mode: ZegoUIKitPrebuilt.OneONoneCall,
+        },
         showPreJoinView: false,
         showTextChat: true,
         maxUsers: 2,
@@ -44,11 +50,9 @@ export default function VideoRoom({ roomId }: VideoRoomProps) {
     return () => {
       mounted = false;
       try {
-        if (zpRef.current && containerRef.current) {
-          zpRef.current.destroy();
-        }
-      } catch (e) {
-        console.warn('Zego destroy failed (ignore in dev):', e);
+        zpRef.current?.destroy();
+      } catch (err) {
+        console.warn("Zego destroy error:", err);
       } finally {
         zpRef.current = null;
       }

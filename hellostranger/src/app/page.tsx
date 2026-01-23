@@ -1,115 +1,135 @@
-'use client';
+"use client";
 
 import NavBar from "@/components/Navbar";
-import VideoRoom from "@/components/VideoRoom";
 import Footer from "@/components/Footer";
+import VideoRoom from "@/components/VideoRoom";
 import { AnimatePresence, motion } from "motion/react";
-import { Video } from "lucide-react";
+import { Video, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+type Status = "idle" | "waiting" | "chatting" | "left" | "only_one";
+
 export default function Home() {
   const socketRef = useRef<Socket | null>(null);
-  const [status, setStatus] = useState<"idle" | "waiting" | "chatting">("idle");
+  const [status, setStatus] = useState<Status>("idle");
   const [roomId, setRoomId] = useState("");
+  const pause = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
       transports: ["websocket"],
     });
+
     socketRef.current = socket;
 
-    socket.on("connect", () => console.log("Connected:", socket.id));
-
-    socket.on("matched", ({ roomId }) => {
-      console.log("Matched in room:", roomId);
+    socket.on("waiting", () => setStatus("waiting"));
+    socket.on("only_one", () => {
+      setStatus("only_one");
+      setTimeout(() => socket.emit("start"), 1500);
+    });
+    socket.on("matched", async ({ roomId }) => {
+      await pause(1500);
       setRoomId(roomId);
       setStatus("chatting");
     });
+    socket.on("partner_left", async () => {
+      setRoomId("");
+      setStatus("left");
+      await pause(1500);
+      socket.emit("start");
+    });
 
-    socket.on("waiting", () => setStatus("waiting"));
-    socket.on("partner_left", () => window.location.reload());
-
-    return () => {
-      socket.off();
-    };
+    return () => socket.disconnect();
   }, []);
 
   const startChat = () => {
-    if (!socketRef.current) return;
-    socketRef.current.emit("start");
     setStatus("waiting");
+    socketRef.current?.emit("start");
   };
 
   const nextChat = () => {
-    if (!socketRef.current) return;
-    socketRef.current.emit("next");
-    window.location.reload();
+    setRoomId("");
+    setStatus("waiting");
+    socketRef.current?.emit("next");
   };
 
   return (
     <>
       <NavBar />
-      <main className="relative min-h-screen w-full bg-gradient-to-br from-black via-zinc-900 to-black text-white overflow-hidden">
+
+      <main className="relative min-h-screen bg-black text-white flex flex-col items-center">
         <AnimatePresence mode="wait">
+          {/* Idle Screen */}
           {status === "idle" && (
             <motion.div
-              key="idle"
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-32"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center min-h-screen px-4 text-center gap-6"
             >
               <motion.img
                 src="/assets/logo.png"
                 alt="logo"
-                className="h-80 w-100 rounded-3xl shadow-2xl object-cover"
+                className="rounded-3xl shadow-2xl object-cover
+                  w-40 h-40
+                  sm:w-56 sm:h-56
+                  md:w-72 md:h-72
+                  lg:w-80 lg:h-80
+                "
                 whileHover={{ scale: 1.05 }}
               />
-              <div className="text-4xl sm:text-5xl font-bold mt-6">Hello Stranger</div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={startChat}
-                className="mt-6 px-6 py-3 bg-white text-black rounded-md text-lg font-medium flex items-center gap-2"
-              >
-                <Video size={24} /> Start Anonymous Chat
-              </motion.button>
-            </motion.div>
-          )}
-
-          {status === "waiting" && (
-            <motion.div
-              key="waiting"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="relative z-10 flex items-center justify-center min-h-screen text-4xl font-bold"
-            >
-              Waiting for a stranger...
-            </motion.div>
-          )}
-
-          {status === "chatting" && roomId && (
-            <motion.div
-              key="chatting"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="relative z-10 flex flex-col items-center justify-center min-h-screen"
-            >
-              <VideoRoom roomId={roomId} />
+              <h1 className="font-bold
+                text-3xl sm:text-4xl md:text-5xl lg:text-6xl
+              ">
+                Hello Stranger
+              </h1>
               <button
-                onClick={nextChat}
-                className="mt-6 px-6 py-3 bg-red-600 text-white rounded-md"
+                onClick={startChat}
+                className="px-4 py-2 sm:px-6 sm:py-3 bg-white text-black rounded-md flex gap-2 items-center"
               >
-                Next
+                <Video /> Start Chat
               </button>
             </motion.div>
           )}
+
+          {/* Waiting / Left / Only One */}
+          {(status === "waiting" || status === "left" || status === "only_one") && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center min-h-screen gap-4 px-4 text-center"
+            >
+              <Loader2 className="h-10 w-10 animate-spin" />
+              <div className="text-xl sm:text-2xl font-semibold">
+                {status === "left" && "Stranger has left…"}
+                {status === "waiting" && "Waiting for a stranger…"}
+                {status === "only_one" && "Only one stranger available…"}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Chatting Screen */}
+          {status === "chatting" && roomId && (
+            <>
+              <VideoRoom roomId={roomId} />
+
+              {/* NEXT BUTTON */}
+              <button
+                onClick={nextChat}
+                className="
+                  fixed top-20 right-4 z-[9999]
+                  px-3 py-2 sm:px-4 sm:py-2 md:px-5 md:py-3
+                  bg-red-600 text-white rounded-full shadow-lg
+                  hover:bg-red-700
+                "
+              >
+                Next
+              </button>
+            </>
+          )}
         </AnimatePresence>
       </main>
+
       <Footer />
     </>
   );
