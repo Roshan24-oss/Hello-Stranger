@@ -74,16 +74,16 @@ export default function Home() {
               <motion.img
                 src="/assets/logo.png"
                 alt="logo"
-                className="rounded-3xl shadow-2xl object-cover
-                  w-40 h-40
-                  sm:w-56 sm:h-56
-                  md:w-72 md:h-72
-                  lg:w-80 lg:h-80
+                className="rounded-2xl shadow-2xl object-cover
+                  w-50 h-40
+                  sm:w-65 sm:h-56
+                  md:w-85 md:h-72
+                  lg:w-92 lg:h-80
                 "
                 whileHover={{ scale: 1.05 }}
               />
               <h1 className="font-bold
-                text-3xl sm:text-4xl md:text-5xl lg:text-6xl
+                text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white
               ">
                 Hello Stranger
               </h1>

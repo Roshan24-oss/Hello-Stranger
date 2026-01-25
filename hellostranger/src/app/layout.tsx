@@ -7,6 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "HelloStranger",
   description: "A simple anonymous chat app built with Next.js and Socket.io",
+  
 };
 
 export default function RootLayout({
