@@ -1,4 +1,5 @@
-Hello Stranger is a online video,text and audio chating platform built with integration of socket.io and zegocloud.
+Hello Stranger is an online platform that enables users to communicate through video, text, and audio chat. The application is built by integrating Socket.IO and ZEGOCLOUD to support real-time communication features.
 
-Socket.io: It helps in bidirectional, and event-based communication between web clients (browsers) and servers.
-ZegoCloud : ZEGOCLOUD is a cloud-based platform that provides developers with API and SDK tools to quickly integrate real-time voice, video, live streaming, and in-app chat functionalities into applications.
+Socket.IO is used to enable bidirectional and event-based communication between web clients (such as browsers) and the server. This allows instant data exchange, making real-time messaging and interaction possible.
+
+ZEGOCLOUD is a cloud-based platform that provides developers with APIs and SDKs to easily integrate real-time communication features such as voice calls, video calls, live streaming, and in-app chat into applications. By using ZEGOCLOUD, Hello Stranger can deliver high-quality audio and video communication between users.
