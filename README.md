@@ -4,4 +4,4 @@ Socket.IO is used to enable bidirectional and event-based communication between 
 
 ZEGOCLOUD is a cloud-based platform that provides developers with APIs and SDKs to easily integrate real-time communication features such as voice calls, video calls, live streaming, and in-app chat into applications. By using ZEGOCLOUD, Hello Stranger can deliver high-quality audio and video communication between users .
 
-.
+..
